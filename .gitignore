@@ -1,6 +1,6 @@
 QualityGap_Data/
 .metadata/
-_pycache_/
-.prject
+__pycache__/
+.project
 .pydevproject
 data
