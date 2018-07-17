@@ -13,7 +13,7 @@ def main():
     print('import testing library')
     p_path = os.path.join('QualityGap_Data', 'Observation.json')
     with open(p_path, 'r') as f:
-       Observation = json.load(f)
+        Observation = json.load(f)
     print(tr.TestRunning(Observation, 'Observation'))
     
                 

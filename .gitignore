@@ -6,5 +6,5 @@ __pycache__/
 data
 .ipynb_checkpoints/
 Schema_Reader.ipynb
-Server.py
 Untitled.ipynb
+temp_data/
