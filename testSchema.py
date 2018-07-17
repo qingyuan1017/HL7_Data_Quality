@@ -3,13 +3,15 @@ Created on Jul 11, 2018
 
 @author: Jason Zhang
 '''
+import json
+import os
+import re
 
 class TestSchema:
     #Schema for different resource in FHIR Release (STU)
     required_keys = []
     reference_keys = []
     codeConcept_keys = []
-    code_keys = []
     name_keys = []
     contact_keys = []
     address_keys = []
@@ -39,111 +41,254 @@ class TestSchema:
             self.documentSchema()
 
     def patientSchema(self):
-        self.required_keys = [{'animal':'species'},[{'communication':'language'}]]
-        self.reference_keys = [[{'contact':'organization'}],['generalPractitioner'],'managingOrganization',[{'link':'other'}]]
-        self.codeConcept_keys = ['maritalStatus',[{'contact':['relationship']}],{'animal':'species'},{'animal':'breed'},
-                            {'animal':'genderStatus'}]
-        self.code_keys = [{'gender':['male','female','other','unknown']}, [{'contact':{'gender':['male','female','other','unknown']}}],
-                    [{'link':{'type':['replaced-by','replaces','refer','seealso']}}]]
+        path = os.path.join('QualityGap_Data/Schema', 'Patient.schema.json')
+        with open(path, 'r',encoding="utf8") as f:
+            self.schema = json.load(f)
+        keys = list(self.schema['definitions'].keys())
+        keys = list(map(lambda x: '#/definitions/' + x ,keys))
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'Reference.schema.json#/definitions/Reference')
+        nested.remove('')
+        self.reference_keys = self.process_schema(direct,nested)
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'CodeableConcept.schema.json#/definitions/CodeableConcept')
+        nested.remove('')
+        self.codeConcept_keys = self.process_schema(direct,nested)
         self.name_keys = [['name'],[{'contact':'name'}]]
         self.contact_keys = [['telecom'],[{'contact':['telecom']}]]
         self.address_keys = [['address'],[{'contact':'address'}]]
 
     def allergyintoleranceSchema(self):
-        self.required_keys = ['verificationStatus','patient',[{'reaction':['manifestation']}]]
-        self.reference_keys = ['patient','recorder','asserter']
+        path = os.path.join('QualityGap_Data/Schema', 'AllergyIntolerance.schema.json')
+        with open(path, 'r',encoding="utf8") as f:
+            self.schema = json.load(f)
+        keys = list(self.schema['definitions'].keys())
+        keys = list(map(lambda x: '#/definitions/' + x ,keys))
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'Reference.schema.json#/definitions/Reference')
+        nested.remove('')
+        self.reference_keys = self.process_schema(direct,nested)
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'CodeableConcept.schema.json#/definitions/CodeableConcept')
+        nested.remove('')
+        self.codeConcept_keys = self.process_schema(direct,nested)
         self.codeConcept_keys = ['code',[{'reaction':['manifestation']}],[{'reaction':'substance'}]]
-        self.code_keys = [{'clinicalStatus':['active','inactive','resolved']},{'verificationStatus':['unconfirmed','confirmed','refuted','entered-in-error']},
-                    {'type':['allergy','intolerance']},[{'category':['food','medication','environment','biologic']}],{'criticality':['low','high','unable-to-assess']},
-                    [{'reaction':{'severity':['mild','moderate','severe']}}]]
 
 
     def conditionSchema(self):
-        self.required_keys = ['subject']
-        self.reference_keys = ['subject','context','asserter',{"stage":['assessment']},
-                         {"evidence":['detail']}]
-        self.codeConcept_keys = [['category'],'severity','code',['bodySite'],{'stage':'summary'},
-                           [{'evidence':['code']}]]
-        self.code_keys = [{"clinicalStatus":['active','recurrence','inactive','remission','resolved']},
-                    {"verificationStatus":['provisional','differential','confirmed','refuted','entered-in-error','unknown']}]
-
+        path = os.path.join('QualityGap_Data/Schema', 'Condition.schema.json')
+        with open(path, 'r',encoding="utf8") as f:
+            self.schema = json.load(f)
+        keys = list(self.schema['definitions'].keys())
+        keys = list(map(lambda x: '#/definitions/' + x ,keys))
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'Reference.schema.json#/definitions/Reference')
+        nested.remove('')
+        self.reference_keys = self.process_schema(direct,nested)
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'CodeableConcept.schema.json#/definitions/CodeableConcept')
+        nested.remove('')
+        self.codeConcept_keys = self.process_schema(direct,nested)
 
     def observationSchema(self):
-        self.required_keys = ['status','code',[{"related":"target"}],[{"component":"code"}]]
-        self.reference_keys = [['basedOn'],'subject','context',['performer'],"specimen","device",
-                   [{'related':'target'}]]
-        self.codeConcept_keys = [['category'],'valueCodeableConcept','code','dataAbsentReason',
-                    'interpretation','bodySite','method',{'referenceRange':'type'},{'referenceRange':'appliesTo'},
-                    [{"component":"valueCodeableConcept"}],[{"component":"dataAbsentReason"}],
-                    [{"component":"interpretation"}],[{"code"}]]
-        self.code_keys = [{"status":['registered','preliminary','final','amended','resolved']},
-                    [{"related":{'type':['has-member','derived-from','sequel-to','replaces','qualified-by','interfered-by']}}]]
-
+        path = os.path.join('QualityGap_Data/Schema', 'Observation.schema.json')
+        with open(path, 'r',encoding="utf8") as f:
+            self.schema = json.load(f)
+        keys = list(self.schema['definitions'].keys())
+        keys = list(map(lambda x: '#/definitions/' + x ,keys))
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'Reference.schema.json#/definitions/Reference')
+        nested.remove('')
+        self.reference_keys = self.process_schema(direct,nested)
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'CodeableConcept.schema.json#/definitions/CodeableConcept')
+        nested.remove('')
+        self.codeConcept_keys = self.process_schema(direct,nested)
 
     def familyhistorySchema(self):
-        self.required_keys = ['status','patient','relationship',[{"condition":"code"}]]
-        self.reference_keys = ['patient','reasonReference']
-        self.codeConcept_keys = ['notDoneReason','relationship',['reasonCode'],
-                    [{"condition":'code'}],[{'condition':'outcome'}]]
-        self.code_keys = [{"status":['partial','completed','enter-in-error','health-unknown']},
-            {"gender":['male','female','other','unknown']}]
-
+        path = os.path.join('QualityGap_Data/Schema', 'FamilyMemberHistory.schema.json')
+        with open(path, 'r',encoding="utf8") as f:
+            self.schema = json.load(f)
+        keys = list(self.schema['definitions'].keys())
+        keys = list(map(lambda x: '#/definitions/' + x ,keys))
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'Reference.schema.json#/definitions/Reference')
+        nested.remove('')
+        self.reference_keys = self.process_schema(direct,nested)
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'CodeableConcept.schema.json#/definitions/CodeableConcept')
+        nested.remove('')
+        self.codeConcept_keys = self.process_schema(direct,nested)
+    
     def reportSchema(self):
-        self.required_keys = ['status','code',[{"image":"link"}],[{"performer":"actor"}]]
-        self.reference_keys = ['subject','context',['specimen'],['result'],['imagingStudy']]
-        self.codeConcept_keys = ['category','code',[{'performer':'role'}],['codedDiagonosis']]
-        self.code_keys = [{"status":['partial','registered','preliminary','final']}]
-
+        path = os.path.join('QualityGap_Data/Schema', 'DiagnosticReport.schema.json')
+        with open(path, 'r',encoding="utf8") as f:
+            self.schema = json.load(f)
+        keys = list(self.schema['definitions'].keys())
+        keys = list(map(lambda x: '#/definitions/' + x ,keys))
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'Reference.schema.json#/definitions/Reference')
+        nested.remove('')
+        self.reference_keys = self.process_schema(direct,nested)
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'CodeableConcept.schema.json#/definitions/CodeableConcept')
+        nested.remove('')
+        self.codeConcept_keys = self.process_schema(direct,nested)
+    
 
     def immunizationSchema(self):
-        self.required_keys = ['status','notGiven','vaccineCode','patient',[{'practitioner':'actor'}],{'vaccinationProtocol':['targetDisease']},
-                        [{'vaccinationProtocol':'doseStatus'}]]
-        self.reference_keys = ['patient','encounter','location','manufacturer',[{'practitioner':'actor'}],
-                         [{'reaction':'detail'}],[{'vaccinationProtocol':'authority'}]]
-        self.codeConcept_keys = ['vaccineCode','reportOrigin','site','route',[{'practitioner':'role'}],
-                    {'explanation': ['reason']},{'explanation': ['reasonNotGiven']},
-                    [{'vaccinationProtocol':['targetDisease']}],[{'vaccinationProtocol':'doesStatus'}],[{'vaccinationProtocol':'doseStatusReason'}]]
-        self.code_keys = [{"status":['completed','entered-in-error']}]
+        path = os.path.join('QualityGap_Data/Schema', 'Immunization.schema.json')
+        with open(path, 'r',encoding="utf8") as f:
+            self.schema = json.load(f)
+        keys = list(self.schema['definitions'].keys())
+        keys = list(map(lambda x: '#/definitions/' + x ,keys))
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'Reference.schema.json#/definitions/Reference')
+        nested.remove('')
+        self.reference_keys = self.process_schema(direct,nested)
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'CodeableConcept.schema.json#/definitions/CodeableConcept')
+        nested.remove('')
+        self.codeConcept_keys = self.process_schema(direct,nested)
 
     def careplanSchema(self):
-        self.required_keys = ['status','intent','subject',[{'activity':{'detail':'status'}}]]
-        self.reference_keys = [['definition'],['basedOn'],['replaces'],['partOf'],'subject','context',['author'],
-                        ['careTeam'],['addresses'],['supportingInfo'],['goal'],
-                        [{'activity':['outcomeReference']}],[{'activity':'reference'}],
-                        [{'activity':{"detail":'definition'}}],[{'activity':{"detail":['reasonReference']}}],
-                        [{'activity':{"detail":['goal']}}],[{'activity':{"detail":'location'}}],
-                        [{'activity':{"detail":['performer']}}],[{'activity':{"detail":['productReference']}}]]
-        self.codeConcept_keys = [['category'],[{'activity':['outcomeCodeableConcept']}],
-                            [{'activity':{'detail':'category'}}],[{'activity':{'detail':'code'}}],
-                            [{'activity':{'detail':['reasonCode']}}]]
-        self.code_keys = [{"status":['draft','active','suspended','completed','entered-in-error','cancelled','unknown']},
-                     {"intent":['proposal','plan','order','option']}]
+        path = os.path.join('QualityGap_Data/Schema', 'CarePlan.schema.json')
+        with open(path, 'r',encoding="utf8") as f:
+            self.schema = json.load(f)
+        keys = list(self.schema['definitions'].keys())
+        keys = list(map(lambda x: '#/definitions/' + x ,keys))
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'Reference.schema.json#/definitions/Reference')
+        nested.remove('')
+        self.reference_keys = self.process_schema(direct,nested)
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'CodeableConcept.schema.json#/definitions/CodeableConcept')
+        nested.remove('')
+        self.codeConcept_keys = self.process_schema(direct,nested)
 
     def procedureSchema(self):
-        self.required_keys = ['status','subject',[{'performer':'actor'}],[{'focalDevice':'manipulated'}]]
-        self.reference_keys = [['definition'],['basedOn'],['partOf'],'subject','context',[{'performer':'actor'}],
-                         [{'performer':'onBehalfOf'}],'location',['reasonReference'],['report'],['complicationDetail'],
-                         [{'focalDevice':'manipulated'}],['usedReference']]
-        self.codeConcept_keys = ['notDoneReason','category','code',[{'performer':'role'}],
-                           ['reasonCode'],['bodySite'],'outcome',['complication'],['followUp'],
-                           [{'focalDevice':'action'}],['usedCode']]
-        self.code_keys = [{"status":['preparation','in-progress','suspended','aborted','completed',
-                                'entered-in-error','unknown']}]
+        path = os.path.join('QualityGap_Data/Schema', 'Procedure.schema.json')
+        with open(path, 'r',encoding="utf8") as f:
+            self.schema = json.load(f)
+        keys = list(self.schema['definitions'].keys())
+        keys = list(map(lambda x: '#/definitions/' + x ,keys))
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'Reference.schema.json#/definitions/Reference')
+        nested.remove('')
+        self.reference_keys = self.process_schema(direct,nested)
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'CodeableConcept.schema.json#/definitions/CodeableConcept')
+        nested.remove('')
+        self.codeConcept_keys = self.process_schema(direct,nested)
+
 
     def deviceSchema(self):
-        self.required_keys = []
-        self.reference_keys = ['patient','owner','location']
-        self.codeConcept_keys = ['type',['safety']]
-        self.code_keys = [{'udi':{'entryType':['barcode','rfid','manual']}},
-                    {'status':['active','inactive','entered-in-error','unknown']}]
-        self.contact_keys = [['contact']]                          
+        path = os.path.join('QualityGap_Data/Schema', 'Device.schema.json')
+        with open(path, 'r',encoding="utf8") as f:
+            self.schema = json.load(f)
+        keys = list(self.schema['definitions'].keys())
+        keys = list(map(lambda x: '#/definitions/' + x ,keys))
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'Reference.schema.json#/definitions/Reference')
+        nested.remove('')
+        self.reference_keys = self.process_schema(direct,nested)
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'CodeableConcept.schema.json#/definitions/CodeableConcept')
+        nested.remove('')
+        self.codeConcept_keys = self.process_schema(direct,nested)                          
 
     def documentSchema(self):
-        self.required_keys = ['status','type','indexed',[{'relatesTo':'code'}],['content'],[{'content':'attachment'}]]
-        self.reference_keys = ['subject',['author'],'authenticator','custodian',[{'relatesTo':'target'}],
-                        {'context':'encounter'},{'context':'sourcePatientInfo'},[{'related':'ref'}]]
-        self.codeConcept_keys = ['type','class','securityLabel',{'context':'facilityType'},
-                            {'context':'practiceSetting'}]
-        self.code_keys = [[{'relatesTo':{'code':['replaces','transforms','signs','appends']}}],
-                    {'status':['current','superseded','entered-in-error']},
-                    {'docStatus':['preliminary','final','appended','amended','entered-in-error']}]           
+        path = os.path.join('QualityGap_Data/Schema', 'DocumentReference.schema.json')
+        with open(path, 'r',encoding="utf8") as f:
+            self.schema = json.load(f)
+        keys = list(self.schema['definitions'].keys())
+        keys = list(map(lambda x: '#/definitions/' + x ,keys))
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'Reference.schema.json#/definitions/Reference')
+        nested.remove('')
+        self.reference_keys = self.process_schema(direct,nested)
+        direct,nested = self.findReference(self.schema,keys,'',[],[],'CodeableConcept.schema.json#/definitions/CodeableConcept')
+        nested.remove('')
+        self.codeConcept_keys = self.process_schema(direct,nested)
+        
+    def findReference(self,d,keys,path,direct,nested,argument):
+        omit = ['definitions','allOf','properties']
+        if isinstance(d, dict):
+            for k, v in d.items():
+                temp = path
+                if (k not in omit) & (k!= keys[0].split('/')[-1]):
+                    if k == 'items':
+                        temp = [temp]
+                    else:
+                        if temp != '':
+                            temp = {str(temp):k}
+                        else:
+                            temp += k
+                if isinstance(v, dict):
+                    self.findReference(v,keys,temp,direct,nested,argument)
+                if isinstance(v, list):
+                    self.findReference(v,keys,temp,direct,nested,argument)
+                else:
+                    if any(key in v for key in keys):
+                        nested.append(path)
+                    if argument in v:
+                        direct.append(path)
+        if isinstance(d, list):
+            for x in d:
+                self.findReference(x,keys,path,direct,nested,argument)
+        return direct,nested
+    
+    def process_schema(self,direct,nested):
+        result = self.removeDict(direct,[])
+        for i in nested:
+            if type(i) == list:
+                key = i[0]
+                if type(key) == dict:
+                    for t in key.keys():
+                        k = key[t]
+                        new_t = self.selfReplacement(t,nested)
+                        if type(new_t) == list:
+                            v = self.findReplacement(k,direct)
+                            for s in v:
+                                result.append([{new_t[0]:[s]}])
+                        else:
+                            v = self.findReplacement(k,direct)
+                            for s in v:
+                                result.append({new_t:[s]})
+                else:
+                    v = self.findReplacement(key,direct)
+                    for s in v:
+                        result.append([s])
+            elif type(i) == dict:
+                for t in i.keys():
+                        k = i[t]
+                        new_t = self.selfReplacement(t,nested)
+                        if type(new_t) == list:
+                            v = self.findReplacement(k,direct)
+                            for s in v:
+                                result.append([{new_t[0]:s}])
+                        else:
+                            v = self.findReplacement(k,direct)
+                            for s in v:
+                                result.append({new_t:s})
+            else:
+                v = self.findReplacement(i,direct)
+                for s in v:
+                    result.append(s)
+    
+    
+        return result
+    
+    def findReplacement(self,key,a):
+        result = []
+        for i in a:
+            if type(i) == list:
+                v= i[0]
+                if type(v) == dict:
+                    if re.search(key,list(v.keys())[0],re.IGNORECASE) != None:
+                        result.append({key:[v[list(v.keys())[0]]]})
+            if type(i) == dict:
+                if re.search(key,list(i.keys())[0],re.IGNORECASE) != None:
+                        result.append({key:i[list(i.keys())[0]]})
+        return result
+                    
+                    
+            
+    def selfReplacement(self,key,nested):
+        for i in nested:
+            if type(i) == list:
+                v= i[0]
+                if type(v) == str:
+                    if re.search(v,key,re.IGNORECASE) != None:
+                        return i
+            if type(i) == str:
+                if re.search(i,key,re.IGNORECASE) != None:
+                        return i 
+                    
+    def removeDict(self,direct,result):
+        for i in direct:
+            if type(i) == str:
+                result.append(i)
+            elif type(i) == list:
+                if type(i[0]) == str:
+                    result.append(i)
+        return result               

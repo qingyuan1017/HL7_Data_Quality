@@ -66,7 +66,7 @@ class dataqualityTest:
 					response = response.content.decode('utf-8')
 				#This condition is only for testing, since we don't know the real return for API
 				if re.search('not exist',response, re.IGNORECASE):
-					source = sourceType +': ' + resourceId
+					source = sourceType +':' + resourceId
 					raw = ref
 					etype = 'reference'
 					description = 'Reference Object do not exist'
@@ -94,26 +94,6 @@ class dataqualityTest:
 			error = errorlog.Error(source, raw, etype,description)
 			return error
 
-	def code_check(self,value,codelist,sourceType,resourceId):
-		# Code not in the code list
-		try:
-			if value not in codelist:
-				source = sourceType +': ' + resourceId
-				raw = value
-				etype = 'code'
-				description = 'Code not in the list'
-				error = errorlog.Error(source, raw, etype,description)
-				return error
-			else:
-				return None
-		except:
-			#Unknown Error
-			source = sourceType +': ' + resourceId
-			raw = value
-			etype = 'code'
-			description = 'Unknown error'
-			error = errorlog.Error(source, raw, etype,description)
-			return error
 
 
 	def codeConcept_check(self,codeConcept,sourceType, resourceId):
@@ -131,7 +111,7 @@ class dataqualityTest:
 								for term in terms:
 									if code['display'].lower() in term.lower():
 										return None
-								source = sourceType +': ' + resourceId
+								source = sourceType +':' + resourceId
 								raw = codeConcept
 								etype = 'codeConcept'
 								description = 'Check SNOMED CT code display'
@@ -146,7 +126,7 @@ class dataqualityTest:
 								for term in terms:
 									if code['display'].lower() in term.lower():
 										return None
-								source = sourceType +': ' + resourceId
+								source = sourceType +':' + resourceId
 								raw = codeConcept
 								etype = 'codeConcept'
 								description = 'Check LOINC code display'
@@ -169,7 +149,7 @@ class dataqualityTest:
 		#Human name use attribute testing
 		if 'use' in n.keys():
 			if n['use'] not in use:
-				source = sourceType +': ' + resourceId
+				source = sourceType +':' + resourceId
 				raw = n['use']
 				etype = 'humanName'
 				description = 'Check name use'
@@ -187,7 +167,7 @@ class dataqualityTest:
 		#Last Name Testing
 		ln = n['family']
 		if self.name_check(ln,self.Lastname) != None:
-			source = sourceType +': ' + resourceId
+			source = sourceType +':' + resourceId
 			raw = n['family']
 			etype = 'humanName'
 			description = 'Check last name and spelling suggestions are '+ self.name_check(ln,self.Firstname)
@@ -221,7 +201,7 @@ class dataqualityTest:
 		#Format attribute test
 		if 'system' in t.keys():
 			if t['system'] not in system:
-				source = sourceType +': ' + resourceId
+				source = sourceType +':' + resourceId
 				raw = t['system']
 				etype = 'contactPoint'
 				description = 'Check contactPoint system'
@@ -230,7 +210,7 @@ class dataqualityTest:
 		#Use attribute test
 		if 'use' in t.keys():
 			if t['use'] not in use:
-				source = sourceType +': ' + resourceId
+				source = sourceType +':' + resourceId
 				raw = t['use']
 				etype = 'contactPoint'
 				description = 'Check contactPoint use'
@@ -240,7 +220,7 @@ class dataqualityTest:
 		if t['system'] in ['phone','fax','sms']:
 			#print(t['value'])
 			if not self.phone_check(t['value']):
-				source = sourceType +': ' + resourceId
+				source = sourceType +':' + resourceId
 				raw = t['value']
 				etype = 'contactPoint/phone'
 				description = 'Check contactPoint phone'
@@ -249,7 +229,7 @@ class dataqualityTest:
 		#Email address validation
 		elif t['system'] == 'email':
 			if not self.email_check(t['value']):
-				source = sourceType +': ' + resourceId
+				source = sourceType +':' + resourceId
 				raw = t['value']
 				etype = 'contactPoint/email'
 				description = 'Email address might not be correct'

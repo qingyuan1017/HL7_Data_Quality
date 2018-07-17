@@ -1,7 +1,7 @@
 '''
 Created on Jul 13, 2018
 
-@author: User1
+@author: Jason Zhang
 '''
 import pandas as pd
 import schemaParser as sp
@@ -17,9 +17,8 @@ def TestRunning(data,flag):
         print('Analyzing '+ flag + ": "+ resource['id'])
         #Combining Error
         ErrorList = ErrorList + sp.codeConcept_test(flag,resource,schema.codeConcept_keys,resource['id']) \
-        + sp.cardinality_test(flag,resource,schema.required_keys,resource['id']) \
-        +sp.reference_test(flag,resource,schema.reference_keys,resource['id']) \
-        +sp.code_test(flag,resource,schema.code_keys,resource['id']) 
+        + sp.schema_test(flag,resource,schema.schema,resource['id']) \
+        +sp.reference_test(flag,resource,schema.reference_keys,resource['id']) 
         #Special case test
         if flag == 'Patient':
             ErrorList = ErrorList + sp.value_test(flag,resource,'humanname',schema.name_keys,resource['id']) \

@@ -4,3 +4,7 @@ __pycache__/
 .project
 .pydevproject
 data
+.ipynb_checkpoints/
+Schema_Reader.ipynb
+Server.py
+Untitled.ipynb
