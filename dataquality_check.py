@@ -19,16 +19,11 @@ import smtplib
 from geopy.geocoders import Nominatim
 import errorlog
 from docutils.nodes import reference
+import json
 
 class dataqualityTest:
 	def __init__(self):
-		#import SNOMED CT dictionary
-		path = os.path.join('QualityGap_Data', 'sct2_Description_Snapshot-en_US1000124_20180301.txt')
-		self.Snomed = pd.read_csv(path, sep="	", low_memory=False)    
-		
-		#import LOINC dictionary
-		path = os.path.join('QualityGap_Data', 'Loinc.csv')
-		self.Loinc = pd.read_csv(path, low_memory=False)
+		self.base_url = 'http://127.0.0.1:5000/'
 		
 		#import first name Dictionary
 		path = os.path.join('QualityGap_Data','Firstname.csv')
@@ -105,34 +100,246 @@ class dataqualityTest:
 						# Case 1: SNOMED CT code concept
 						if code['system'] == 'http://snomed.info/sct':
 							c = code['code']
-							terms = list(self.Snomed[self.Snomed['conceptId'] == int(c)]['term'])
-							if 'display' in code.keys():
-							#might have to find a better way to test display
-								for term in terms:
-									if code['display'].lower() in term.lower():
-										return None
+							response = requests.get(self.base_url+'codeConcept/SNOMED/'+c)
+							if response.text == '[]':
 								source = sourceType +':' + resourceId
 								raw = codeConcept
 								etype = 'codeConcept'
-								description = 'Check SNOMED CT code display'
+								description = 'Check SNOMED code'
 								error = errorlog.Error(source, raw, etype,description)
 								return error
+	
 						# Case 2: LOINC code concept
-						if code['system'] == 'http://loinc.org':
+						elif code['system'] == 'http://loinc.org':
 							c = code['code']
-							terms = list(self.Loinc[self.Loinc['LOINC_NUM'] == c]['COMPONENT'])
-							if 'display' in code.keys():
-							#might have to find a better way to test display
-								for term in terms:
-									if code['display'].lower() in term.lower():
-										return None
+							response = requests.get(self.base_url+'codeConcept/LOINC/'+c)
+							if response.text == '[]':
 								source = sourceType +':' + resourceId
 								raw = codeConcept
 								etype = 'codeConcept'
-								description = 'Check LOINC code display'
+								description = 'Check LOINC code'
 								error = errorlog.Error(source, raw, etype,description)
 								return error
-						#TO DO: More code system
+							else:
+								loinc = pd.read_json(response.text)
+								terms = list(loinc['SHORTNAME']) + list(loinc['LONG_COMMON_NAME'])
+								if 'display' in code.keys():
+								#might have to find a better way to test display
+									for term in terms:
+										if code['display'].lower() in term.lower():
+											return None
+									source = sourceType +':' + resourceId
+									raw = codeConcept
+									etype = 'codeConcept'
+									description = 'Check LOINC display'
+									error = errorlog.Error(source, raw, etype,description)
+									return error
+						# Case 3: UCUM
+						elif code['system'] == 'http://unitsofmeasure.org':
+							c = code['code']
+							response = requests.get(self.base_url+'codeConcept/UCUM/'+c)
+							if response.text == '[]':
+								source = sourceType +':' + resourceId
+								raw = codeConcept
+								etype = 'codeConcept'
+								description = 'Check UCUM code'
+								error = errorlog.Error(source, raw, etype,description)
+								return error
+						# Case 4: NDFRT
+						elif code['system'] == 'http://hl7.org/fhir/ndfrt':
+							c = code['code']
+							response = requests.get(self.base_url+'codeConcept/NDFRT/'+c)
+							if response.text == '[]':
+								source = sourceType +':' + resourceId
+								raw = codeConcept
+								etype = 'codeConcept'
+								description = 'Check NDFRT code'
+								error = errorlog.Error(source, raw, etype,description)
+								return error
+						# Case 5: UNII
+						elif code['system'] == 'http://fdasis.nlm.nih.gov':
+							c = code['code']
+							response = requests.get(self.base_url+'codeConcept/UNII/'+c)
+							if response.text == '[]':
+								source = sourceType +':' + resourceId
+								raw = codeConcept
+								etype = 'codeConcept'
+								description = 'Check UNII code'
+								error = errorlog.Error(source, raw, etype,description)
+								return error
+							else:
+								unii = pd.read_json(response.text)
+								terms = list(unii['PT']) 
+								if 'display' in code.keys():
+								#might have to find a better way to test display
+									for term in terms:
+										if code['display'].lower() in term.lower():
+											return None
+									source = sourceType +':' + resourceId
+									raw = codeConcept
+									etype = 'codeConcept'
+									description = 'Check UNII display'
+									error = errorlog.Error(source, raw, etype,description)
+									return error
+						# Case 6: NDC
+						elif code['system'] == 'http://hl7.org/fhir/sid/ndc':
+							c = code['code']
+							response = requests.get(self.base_url+'codeConcept/NDC/'+c)
+							if response.text == '[]':
+								source = sourceType +':' + resourceId
+								raw = codeConcept
+								etype = 'codeConcept'
+								description = 'Check NDC code'
+								error = errorlog.Error(source, raw, etype,description)
+								return error
+							else:
+								ndc = pd.read_json(response.text)
+								terms = list(ndc['PACKAGEDESCRIPTION']) 
+								if 'display' in code.keys():
+								#might have to find a better way to test display
+									for term in terms:
+										if code['display'].lower() in term.lower():
+											return None
+									source = sourceType +':' + resourceId
+									raw = codeConcept
+									etype = 'codeConcept'
+									description = 'Check NDC display'
+									error = errorlog.Error(source, raw, etype,description)
+									return error
+						# Case 7: CVX
+						elif code['system'] == 'http://hl7.org/fhir/sid/cvx':
+							c = code['code']
+							response = requests.get(self.base_url+'codeConcept/CVX/'+c)
+							if response.text == '[]':
+								source = sourceType +':' + resourceId
+								raw = codeConcept
+								etype = 'codeConcept'
+								description = 'Check CVX code'
+								error = errorlog.Error(source, raw, etype,description)
+								return error
+							else:
+								ndc = pd.read_json(response.text)
+								terms = list(ndc['CVX Short Description']) 
+								if 'display' in code.keys():
+								#might have to find a better way to test display
+									for term in terms:
+										if code['display'].lower() in term.lower():
+											return None
+									source = sourceType +':' + resourceId
+									raw = codeConcept
+									etype = 'codeConcept'
+									description = 'Check CVX display'
+									error = errorlog.Error(source, raw, etype,description)
+									return error
+						# Case 8: v2
+						elif 'http://hl7.org/fhir/v2' in code['system']:
+							c = code['code']
+							system = code['system']
+							s = system.split('/')[-1]
+							cs = {}
+							response = requests.get(self.base_url+'codeConcept/v2/'+s)
+							if response.status_code == 200:
+								obj = json.loads(response.text)
+								concepts = obj['concept']
+								for concept in concepts:
+									cs[concept['code']] = concept['display']
+								if c not in cs.keys():
+									source = sourceType +':' + resourceId
+									raw = codeConcept
+									etype = 'codeConcept'
+									description = 'Check v2/' + s + 'code'
+									error = errorlog.Error(source, raw, etype,description)
+									return error
+								else:
+									if 'display' in code.keys():
+										if code['display'] != cs[c]:
+											source = sourceType +':' + resourceId
+											raw = codeConcept
+											etype = 'codeConcept'
+											description = 'Check v2/' + s + 'display'
+											error = errorlog.Error(source, raw, etype,description)
+											return error
+							else:
+								source = sourceType +':' + resourceId
+								raw = codeConcept
+								etype = 'codeConcept'
+								description = 'Check v2/' + s + 'system'
+								error = errorlog.Error(source, raw, etype,description)
+								return error
+						
+						# Case 9: v3
+						elif 'http://hl7.org/fhir/v2' in code['system']:
+							c = code['code']
+							system = code['system']
+							s = system.split('/')[-1]
+							cs = {}
+							response = requests.get(self.base_url+'codeConcept/v3/'+s)
+							if response.status_code == 200:
+								obj = json.loads(response.text)
+								concepts = obj['concept']
+								for concept in concepts:
+									cs[concept['code']] = concept['display']
+								if c not in cs.keys():
+									source = sourceType +':' + resourceId
+									raw = codeConcept
+									etype = 'codeConcept'
+									description = 'Check v3/' + s + 'code'
+									error = errorlog.Error(source, raw, etype,description)
+									return error
+								else:
+									if 'display' in code.keys():
+										if code['display'] != cs[c]:
+											source = sourceType +':' + resourceId
+											raw = codeConcept
+											etype = 'codeConcept'
+											description = 'Check v3/' + s + 'display'
+											error = errorlog.Error(source, raw, etype,description)
+											return error
+							else:
+								source = sourceType +':' + resourceId
+								raw = codeConcept
+								etype = 'codeConcept'
+								description = 'Check v3/' + s +  'system'
+								error = errorlog.Error(source, raw, etype,description)
+								return error
+								
+						# Case 10: Internal
+						else:
+							if 'http://hl7.org/fhir/' in code['system']:
+								c = code['code']
+								system = code['system']
+								s = system.split('/')[-1]
+								cs = {}
+								response = requests.get(self.base_url+'codeConcept/internal/'+s)
+								if response.status_code == 200:
+									obj = json.loads(response.text)
+									concepts = obj['concept']
+									for concept in concepts:
+										cs[concept['code']] = concept['display']
+									if c not in cs.keys():
+										source = sourceType +':' + resourceId
+										raw = codeConcept
+										etype = 'codeConcept'
+										description = 'Check internal/' + s + 'code'
+										error = errorlog.Error(source, raw, etype,description)
+										return error
+									else:
+										if 'display' in code.keys():
+											if code['display'] != cs[c]:
+												source = sourceType +':' + resourceId
+												raw = codeConcept
+												etype = 'codeConcept'
+												description = 'Check internal/' + s + 'display'
+												error = errorlog.Error(source, raw, etype,description)
+												return error
+								else:
+									source = sourceType +':' + resourceId
+									raw = codeConcept
+									etype = 'codeConcept'
+									description = 'Check internal/' + s + 'display'
+									error = errorlog.Error(source, raw, etype,description)
+									return error			
+													
 			return None
 		except:
 			#Unknown System Error

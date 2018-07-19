@@ -68,7 +68,7 @@ class TestSchema:
         direct,nested = self.findReference(self.schema,keys,'',[],[],'CodeableConcept.schema.json#/definitions/CodeableConcept')
         nested.remove('')
         self.codeConcept_keys = self.process_schema(direct,nested)
-        self.codeConcept_keys = ['code',[{'reaction':['manifestation']}],[{'reaction':'substance'}]]
+        
 
 
     def conditionSchema(self):
